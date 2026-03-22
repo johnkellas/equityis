@@ -17,7 +17,9 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
         @keyframes fade-in { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slide-up { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
         .animate-in { animation: fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-slide-up { animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
 </head>
 <body>
@@ -38,7 +40,8 @@
                 Search: <React.Fragment><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></React.Fragment>,
                 Mail: <React.Fragment><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></React.Fragment>,
                 Info: <React.Fragment><circle cx="12" cy="12" r="10" /><path d="M12 16v-4m0-4h.01" /></React.Fragment>,
-                Quote: <path d="M3 21c3 0 7-1 7-8V5H3v16Zm11 0c3 0 7-1 7-8V5h-7v16Z" />
+                Quote: <path d="M3 21c3 0 7-1 7-8V5H3v16Zm11 0c3 0 7-1 7-8V5h-7v16Z" />,
+                AlertTriangle: <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
             };
             return (
                 <svg 
@@ -104,7 +107,7 @@
             { id: 'E7', word: "Rights of Nature", description: "Granting enforceable rights to ecosystems to exist and regenerate.", details: "Nature is a subject, not an object. Ecuador was first to enshrine this in 2008, granting nature the right to vital cycles.", source: "Global Alliance for the Rights of Nature", link: "https://ecojurisprudence.org/initiatives/ecuador-constitution/", theme: "bg-emerald-50 text-emerald-900 border-emerald-200" }
         ];
 
-        const INQUIRY_BANK = [
+        const ENQUIRY_BANK = [
             { domain: "Finance & Wealth", q: "Can race-neutral economic policies effectively close the racial wealth gap, or must they be race-conscious?", a: "A 2019 analysis projected Baby Bonds would reduce the Black-white young adult wealth gap ratio from 15.9:1 to 1.4:1—substantial but incomplete. Structural factors like intergenerational transfers require targeted responses.", source: "Aladangady & Forde (2021) / Federal Reserve Board" },
             { domain: "Housing & Land", q: "If housing is a human right, why does segregation persist even in countries with anti-discrimination laws?", a: "Rights alone do not dismantle land speculation or exclusionary zoning. Spatial inequality is sustained by interlocking institutional practices requiring inclusionary zoning and community land trusts.", source: "Massey & Denton (1993) / UN Special Rapporteur" },
             { domain: "Technology & AI", q: "Can technical fairness metrics alone ensure equitable AI, or do they risk obscuring structural inequities?", a: "Algorithms optimized for cost prediction often deprioritize Black patients due to historical access barriers. Equitable AI requires diverse design, historical context, and accountability centering affected communities.", source: "Obermeyer et al. (2019) / Science 366(6464)" },
@@ -118,7 +121,7 @@
             const [activePanel, setActivePanel] = useState(null);
             const [userInput, setUserInput] = useState("");
             const [searchQuery, setSearchQuery] = useState("");
-            const [showInquiryNotice, setShowInquiryNotice] = useState(false);
+            const [showEnquiryNotice, setShowEnquiryNotice] = useState(false);
             const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
             useEffect(() => {
@@ -187,10 +190,10 @@
 
                             <div className="flex gap-8 md:gap-16 justify-center items-center pt-8">
                                 <div className="flex flex-col items-center gap-4">
-                                    <button onClick={(e) => { e.stopPropagation(); setActivePanel('inquiry'); }} className={`w-28 h-28 md:w-36 md:h-36 rounded-full border-2 border-black/10 flex items-center justify-center transition-all hover:bg-white hover:scale-110 hover:shadow-2xl active:scale-95 ${activePanel === 'inquiry' ? 'bg-white shadow-xl ring-4 ring-black/5' : 'bg-transparent'}`}>
+                                    <button onClick={(e) => { e.stopPropagation(); setActivePanel('enquiry'); }} className={`w-28 h-28 md:w-36 md:h-36 rounded-full border-2 border-black/10 flex items-center justify-center transition-all hover:bg-white hover:scale-110 hover:shadow-2xl active:scale-95 ${activePanel === 'enquiry' ? 'bg-white shadow-xl ring-4 ring-black/5' : 'bg-transparent'}`}>
                                         <span className="text-5xl md:text-7xl font-black italic">?</span>
                                     </button>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Inquiry</span>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Enquiry</span>
                                 </div>
                                 <div className="flex flex-col items-center gap-4">
                                     <button onClick={(e) => { e.stopPropagation(); setActivePanel('archive'); }} className={`w-28 h-28 md:w-36 md:h-36 rounded-full border-2 border-black/10 flex items-center justify-center transition-all hover:bg-white hover:scale-110 hover:shadow-2xl active:scale-95 ${activePanel === 'archive' ? 'bg-white shadow-xl ring-4 ring-black/5' : 'bg-transparent'}`}>
@@ -236,25 +239,25 @@
                         </div>
                     </div>
 
-                    <div className={`fixed inset-y-0 right-0 w-full md:w-[550px] bg-white shadow-2xl z-50 transform transition-transform duration-500 ease-in-out ${activePanel === 'inquiry' ? 'translate-x-0' : 'translate-x-full'}`}>
+                    <div className={`fixed inset-y-0 right-0 w-full md:w-[550px] bg-white shadow-2xl z-50 transform transition-transform duration-500 ease-in-out ${activePanel === 'enquiry' ? 'translate-x-0' : 'translate-x-full'}`}>
                         <div className="h-full flex flex-col">
                             <div className="p-8 border-b flex justify-between items-center bg-indigo-50">
-                                <h3 className="text-2xl font-black italic">Inquiry</h3>
+                                <h3 className="text-2xl font-black italic">Enquiry</h3>
                                 <button onClick={() => setActivePanel(null)} className="p-2 hover:bg-indigo-100 rounded-full transition-colors"><Icon name="X" /></button>
                             </div>
                             <div className="p-8 bg-indigo-50/50 relative">
-                                <form onSubmit={(e) => { e.preventDefault(); setShowInquiryNotice(true); setTimeout(() => setShowInquiryNotice(false), 8000); }} className="space-y-4">
+                                <form onSubmit={(e) => { e.preventDefault(); setShowEnquiryNotice(true); setTimeout(() => setShowEnquiryNotice(false), 8000); }} className="space-y-4">
                                     <label className="text-xs font-black uppercase tracking-widest opacity-50 flex items-center gap-2">Questions people have about equity <Icon name="Info" size={12} /></label>
                                     <div className="relative">
                                         <input type="text" value={userInput} onChange={(e) => setUserInput(e.target.value)} placeholder="Ask a new question..." className="w-full bg-white border-2 border-indigo-100 rounded-2xl px-6 py-4 focus:outline-none focus:border-indigo-600 transition-all font-medium pr-16 shadow-sm" />
                                         <button className="absolute right-2 top-2 bg-indigo-600 text-white p-2 rounded-xl hover:scale-105 transition-transform shadow-lg"><Icon name="ArrowRight" size={24} /></button>
                                     </div>
                                 </form>
-                                {showInquiryNotice && (
+                                {showEnquiryNotice && (
                                     <div className="absolute top-0 left-0 right-0 p-8 bg-indigo-600 text-white z-20 rounded-b-[2rem] shadow-2xl animate-in">
                                         <div className="flex justify-between items-start mb-4">
                                             <h4 className="text-lg font-bold flex items-center gap-2 italic"><Icon name="Mail" size={18} /> Direct Dialogue</h4>
-                                            <button onClick={() => setShowInquiryNotice(false)} className="text-white/60 hover:text-white"><Icon name="X" size={20} /></button>
+                                            <button onClick={() => setShowEnquiryNotice(false)} className="text-white/60 hover:text-white"><Icon name="X" size={20} /></button>
                                         </div>
                                         <p className="text-sm font-medium leading-relaxed mb-6">Community submission features are not yet live. Please contribute to the discourse by reaching out to the steward of this project.</p>
                                         <a href="mailto:john@thisequals.net" className="flex items-center justify-center gap-2 bg-white text-indigo-600 px-6 py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-50 transition-colors shadow-sm">Email john@thisequals.net <Icon name="ArrowRight" size={14} /></a>
@@ -263,7 +266,7 @@
                             </div>
                             <div className="flex-1 overflow-y-auto p-8 space-y-12 custom-scrollbar">
                                 <h4 className="text-xs font-black uppercase tracking-widest opacity-40 mb-2 border-b pb-4">Evidence-Based Bank</h4>
-                                {INQUIRY_BANK.map((item, i) => (
+                                {ENQUIRY_BANK.map((item, i) => (
                                     <div key={i} className="space-y-6 animate-in">
                                         <div className="flex gap-4 items-start">
                                             <div className="mt-1 flex-shrink-0 p-2 bg-indigo-100 rounded-xl"><Icon name="MessageCircle" size={20} className="text-indigo-600" /></div>
@@ -285,6 +288,16 @@
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Disclaimer Banner */}
+                    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[40] w-auto max-w-[90vw] animate-slide-up">
+                        <div className="bg-white/40 backdrop-blur-xl border border-black/5 px-6 py-2.5 rounded-full shadow-2xl flex items-center gap-3">
+                            <Icon name="AlertTriangle" size={12} className="text-amber-600 opacity-60" />
+                            <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600 whitespace-nowrap">
+                                Research supported by AI & fallible humans. May contain mistakes.
+                            </p>
                         </div>
                     </div>
 
