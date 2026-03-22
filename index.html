@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equity.is — A Living Reflection</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and Babel CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- Inline SVG Icons ---
+        const Icon = ({ name, size = 24, className = "" }) => {
+            const icons = {
+                ExternalLink: <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m4-3h6v6m-11 5L21 3" />,
+                ArrowRight: <path d="M5 12h14m-7-7 7 7-7 7" />,
+                X: <path d="M18 6 6 18M6 6l12 12" />,
+                ChevronRight: <path d="m9 18 6-6-6-6" />,
+                ChevronLeft: <path d="m15 18-6-6 6-6" />,
+                MessageCircle: <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />,
+                Search: <React.Fragment><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></React.Fragment>,
+                Mail: <React.Fragment><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></React.Fragment>,
+                Info: <React.Fragment><circle cx="12" cy="12" r="10" /><path d="M12 16v-4m0-4h.01" /></React.Fragment>,
+                Quote: <path d="M3 21c3 0 7-1 7-8V5H3v16Zm11 0c3 0 7-1 7-8V5h-7v16Z" />
+            };
+            return (
+                <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width={size} 
+                    height={size} 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className={className}
+                >
+                    {icons[name]}
+                </svg>
+            );
+        };
+
+        // --- DATASET ---
+        const DEFINITIONS = [
+            { id: 'F1', word: "Financial Inclusion", description: "Ensuring all people have access to useful, affordable financial products and services.", details: "Removes barriers preventing marginalized populations from accessing savings, credit, and insurance. The World Bank reports 1.4 billion adults remain unbanked globally.", source: "World Bank Group", link: "https://www.worldbank.org/en/topic/financialinclusion", theme: "bg-blue-50 text-blue-900 border-blue-200" },
+            { id: 'F2', word: "CDFIs", description: "Mission-driven institutions providing capital to economically underserved communities.", details: "Community Development Financial Institutions direct loans and technical assistance to low-income areas excluded from mainstream banking.", source: "U.S. Department of the Treasury", link: "https://www.cdfifund.gov/", theme: "bg-blue-50 text-blue-900 border-blue-200" },
+            { id: 'F3', word: "ESG Principles", description: "Integrating environmental, social, and governance factors into investment decisions.", details: "The 'Social' pillar specifically addresses workforce equity, human rights, and inclusive economic participation for over 5,000 signatories.", source: "UN Principles for Responsible Investment", link: "https://www.unpri.org/about-us/about-the-pri", theme: "bg-blue-50 text-blue-900 border-blue-200" },
+            { id: 'F4', word: "Wealth Inequality Analysis", description: "The recognition that when capital returns exceed growth, inequality deepens.", details: "Thomas Piketty's (r > g) framework reveals that without intervention, capitalism naturally produces arbitrary and unsustainable inequalities.", source: "Thomas Piketty", link: "https://doi.org/10.1257/jep.29.1.67", theme: "bg-blue-50 text-blue-900 border-blue-200" },
+            { id: 'F5', word: "Microfinance", description: "Providing small loans without collateral to foster self-sufficiency among the impoverished.", details: "The Grameen model directs over 94% of loans to women, demonstrating that the poor are effective agents of their own empowerment.", source: "Muhammad Yunus & Grameen Bank", link: "https://www.nobelprize.org/prizes/peace/2006/yunus/speedread/", theme: "bg-blue-50 text-blue-900 border-blue-200" },
+            { id: 'F6', word: "Baby Bonds", description: "Publicly funded trust accounts scaled inversely to wealth to close the racial gap.", details: "A structurally equitable mechanism to disrupt intergenerational wealth inequality, addressing a median Black-white wealth ratio of 15.9:1.", source: "Darrick Hamilton & William A. Darity Jr.", link: "https://doi.org/10.1007/s12114-010-9063-1", theme: "bg-blue-50 text-blue-900 border-blue-200" },
+            { id: 'F7', word: "Stakeholder Theory", description: "The framework that businesses should create value for all, not just shareholders.", details: "Challenges the Friedman doctrine, arguing businesses operate within webs of interdependent relationships including employees and communities.", source: "R. Edward Freeman", link: "https://www.darden.virginia.edu/stakeholder-theory", theme: "bg-blue-50 text-blue-900 border-blue-200" },
+            { id: 'H1', word: "Community Land Trusts", description: "Nonprofit organizations holding land in trust permanently to ensure affordability.", details: "Separates land ownership from building ownership, removing housing from speculative markets and centering community governance.", source: "Grounded Solutions Network", link: "https://inclusionaryhousing.org/inclusionary-housing-explained/what-is-inclusionary-housing/", theme: "bg-amber-50 text-amber-900 border-amber-200" },
+            { id: 'H2', word: "Housing First", description: "Immediate permanent housing provided without behavioral preconditions.", details: "Recognizes housing as a fundamental right rather than a reward. Retention rates average 85–90% compared to traditional models.", source: "Pathways to Housing", link: "https://www.pathwayshousingfirst.org/", theme: "bg-amber-50 text-amber-900 border-amber-200" },
+            { id: 'H3', word: "Inclusionary Zoning", description: "Policies requiring developers to include affordable units in new developments.", details: "Counteracts the legacy of exclusionary zoning by mandating 10–20% of new units be set aside for lower-income households.", source: "Montgomery County Maryland / Grounded Solutions", link: "https://inclusionaryhousing.org/inclusionary-housing-explained/what-is-inclusionary-housing/", theme: "bg-amber-50 text-amber-900 border-amber-200" },
+            { id: 'H4', word: "Land Value Taxation", description: "A tax on unimproved land value to capture community-created value.", details: "Principle that land value arises from community activity, not individual effort, and rightfully belongs to the public.", source: "Henry George / Lincoln Institute", link: "https://www.lincolninst.edu/publications/working-papers/land-value-taxation-views-concepts-methods/", theme: "bg-amber-50 text-amber-900 border-amber-200" },
+            { id: 'H5', word: "The Fair Housing Act", description: "Federal law prohibiting housing discrimination to dismantle segregation.", details: "Beyond prohibiting bias, the AFFH mandate requires federal grantees to take proactive steps to dismantle historical segregation.", source: "U.S. Department of Justice / HUD", link: "https://www.justice.gov/crt/fair-housing-act-1", theme: "bg-amber-50 text-amber-900 border-amber-200" },
+            { id: 'H6', word: "The Right to the City", description: "The collective right of all inhabitants to shape and transform urban space.", details: "Challenges commodification, asserting that urban life should be produced by inhabitants rather than just property owners.", source: "Henri Lefebvre / UN-Habitat", link: "https://unhabitat.org/the-right-to-adequate-housing-fact-sheet-no-21rev1", theme: "bg-amber-50 text-amber-900 border-amber-200" },
+            { id: 'H7', word: "Indigenous Land Rights", description: "Framework affirming Indigenous peoples' control over traditional territories.", details: "Article 26–28 of UNDRIP affirm rights to restitution or compensation for territories confiscated without free, prior, and informed consent.", source: "United Nations (UNDRIP)", link: "https://www.un.org/development/desa/indigenouspeoples/wp-content/uploads/sites/19/2018/11/UNDRIP_E_web.pdf", theme: "bg-amber-50 text-amber-900 border-amber-200" },
+            { id: 'T1', word: "Algorithmic Fairness", description: "Ensuring automated systems do not produce unjust or discriminatory outcomes.", details: "Addresses the risk of AI encoding societal biases. Research shows many technical fairness metrics are mathematically incompatible.", source: "ACM FAccT Community", link: "https://doi.org/10.1145/3194770.3194776", theme: "bg-slate-50 text-slate-900 border-slate-200" },
+            { id: 'T2', word: "Design Justice", description: "Centering marginalized communities in design to challenge structural inequalities.", details: "Redistributes design power so communities define problems and solutions rather than being treated as passive users.", source: "Sasha Costanza-Chock / MIT Press", link: "https://mitpress.mit.edu/9780262043458/design-justice/", theme: "bg-slate-50 text-slate-900 border-slate-200" },
+            { id: 'T3', word: "Data Feminism", description: "A framework for examining power, bias, and justice in data science.", details: "Systematic guide with seven principles to recognize that data are never neutral but shaped by power relations.", source: "D'Ignazio & Klein", link: "https://mitpress.mit.edu/9780262547185/data-feminism/", theme: "bg-slate-50 text-slate-900 border-slate-200" },
+            { id: 'T4', word: "Platform Cooperativism", description: "Worker-owned digital platforms as alternatives to extractive capitalism.", details: "Applies cooperative principles to the digital economy, ensuring economic value generated by labor flows back to workers.", source: "Trebor Scholz / Platform Coop", link: "https://platform.coop/", theme: "bg-slate-50 text-slate-900 border-slate-200" },
+            { id: 'T5', word: "The CARE Principles", description: "Indigenous data governance prioritizing collective benefit and authority.", details: "Addresses the gap in open data movement regarding colonial histories. Asserts rights to control data about Indigenous knowledge.", source: "Global Indigenous Data Alliance", link: "https://www.gida-global.org/care", theme: "bg-slate-50 text-slate-900 border-slate-200" },
+            { id: 'T6', word: "The EU AI Act", description: "World's first legal framework protecting rights through risk-based AI regulation.", details: "Operationalized through mandatory bias testing and human oversight to prevent discrimination in employment and law enforcement.", source: "European Parliament", link: "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=OJ:L_202401689", theme: "bg-slate-50 text-slate-900 border-slate-200" },
+            { id: 'T7', word: "Digital Equity", description: "Ensuring skill, technology, and connectivity access for full digital life participation.", details: "Moves beyond the binary 'divide' to address literacy, device access, and culturally relevant content barriers.", source: "National Digital Inclusion Alliance", link: "https://www.digitalequityact.org/", theme: "bg-slate-50 text-slate-900 border-slate-200" },
+            { id: 'B1', word: "Health Equity", description: "Absence of avoidable health differences among social or demographic groups.", details: "Achieved when everyone can attain their full potential for health regardless of social position or structural determination.", source: "World Health Organization", link: "https://www.who.int/health-topics/health-equity", theme: "bg-rose-50 text-rose-900 border-rose-200" },
+            { id: 'B2', word: "Social Determinants", description: "Conditions of birth, work, and aging that powerfully shape health inequalities.", details: "Sir Michael Marmot established that inequities in power, money, and resources produce avoidable social gradients in health.", source: "Sir Michael Marmot", link: "https://doi.org/10.1016/S0140-6736(05)71146-6", theme: "bg-rose-50 text-rose-900 border-rose-200" },
+            { id: 'B3', word: "Levels of Racism", description: "Distinguishing institutional, personally mediated, and internalized racism.", details: "Dr. Camara Phyllis Jones shows how historical resource deprivation (the 'Gardener's Tale') produces persistent group-level disparities.", source: "Camara Phyllis Jones", link: "https://doi.org/10.2105/AJPH.90.8.1212", theme: "bg-rose-50 text-rose-900 border-rose-200" },
+            { id: 'B4', word: "Environmental Health Justice", description: "Equal protection from environmental hazards regardless of race or income.", details: "Robert Bullard documented that waste sites are disproportionately sited in Black neighborhoods; zip code is a powerful predictor of health.", source: "Robert D. Bullard", link: "https://doi.org/10.1177/074823379300900508", theme: "bg-rose-50 text-rose-900 border-rose-200" },
+            { id: 'B5', word: "Reproductive Justice", description: "Framework asserting rights to bodily autonomy and safe parenting environments.", details: "Explicitly addresses historical reproductive oppression including forced sterilizations. Connects autonomy to housing and food security.", source: "Loretta J. Ross / SisterSong", link: "https://www.macfound.org/fellows/class-of-2022/loretta-j-ross", theme: "bg-rose-50 text-rose-900 border-rose-200" },
+            { id: 'B6', word: "Genomic Equity", description: "Inclusive research ensuring precision medicine benefits all populations.", details: "Approximately 86% of GWAS participants are of European descent, creating a bias that disproportionately serves wealthy ancestry groups.", source: "Nature Medicine 28", link: "https://doi.org/10.1038/s41591-021-01672-4", theme: "bg-rose-50 text-rose-900 border-rose-200" },
+            { id: 'B7', word: "Access to Medicines", description: "Affirming that IP rights should not prevent countries from protecting health.", details: "The 2001 Doha Declaration affirmed nations' rights to compulsory licensing for life-saving treatments like HIV/AIDS meds.", source: "WTO / Doha Declaration", link: "https://www.wto.org/english/thewto_e/minist_e/min01_e/mindecl_trips_e.htm", theme: "bg-rose-50 text-rose-900 border-rose-200" },
+            { id: 'L1', word: "Equity Jurisprudence", description: "Traditional fairness-based remedies when rigid law produces unjust outcomes.", details: "Empowers judges to apply principles of conscience rather than strict rules. Maxim: 'equity will not suffer a wrong without a remedy'.", source: "English Chancery tradition", link: "https://www.fjc.gov/history/work-courts/jurisdiction-equity", theme: "bg-indigo-50 text-indigo-900 border-indigo-200" },
+            { id: 'L2', word: "Justice as Fairness", description: "Structuring society so inequalities benefit the least advantaged members.", details: "John Rawls' difference principle: institutions are just if rational persons would agree to them from behind a 'veil of ignorance'.", source: "John Rawls", link: "https://plato.stanford.edu/entries/rawls/", theme: "bg-indigo-50 text-indigo-900 border-indigo-200" },
+            { id: 'L3', word: "Intersectional Law", description: "Legal framework revealing how overlapping identities compound discrimination.", details: "Exposes how antidiscrimination law treats race and gender as mutually exclusive, failing to protect those at the intersection.", source: "Kimberlé Crenshaw", link: "https://chicagounbound.uchicago.edu/uclf/vol1989/iss1/8/", theme: "bg-indigo-50 text-indigo-900 border-indigo-200" },
+            { id: 'L4', word: "The Capabilities Approach", description: "Assessing equity by what people can actually do and be, not just resources.", details: "Redefines equity as ensuring substantive freedoms (functionings) like health, education, and political participation.", source: "Sen & Nussbaum", link: "https://plato.stanford.edu/entries/capability-approach/", theme: "bg-indigo-50 text-indigo-900 border-indigo-200" },
+            { id: 'L5', word: "Targeted Universalism", description: "Universal goals pursued through group-specific strategies.", details: "Designs differentiated strategies for each group based on how structural barriers situate them relative to a shared goal.", source: "john a. powell", link: "https://belonging.berkeley.edu/targeted-universalism", theme: "bg-indigo-50 text-indigo-900 border-indigo-200" },
+            { id: 'L6', word: "Restorative Paradigm", description: "Justice centering harm repair, accountability, and community engagement.", details: "Reframes questions from 'What rules were broken?' to 'Who was harmed and what are their needs?'.", source: "Howard Zehr", link: "https://restorativejustice.org/rj-archive/howard-zehrs-restorative-justice-threes/", theme: "bg-indigo-50 text-indigo-900 border-indigo-200" },
+            { id: 'L7', word: "Transitional Justice", description: "Holistic frameworks addressing mass violations through truth and reparations.", details: "Four pillars: criminal accountability, truth commissions, reparations, and institutional reform. Victims participate directly.", source: "ICTJ / Ruti Teitel", link: "https://www.ictj.org/what-transitional-justice", theme: "bg-indigo-50 text-indigo-900 border-indigo-200" },
+            { id: 'E1', word: "Climate Justice", description: "Demanding equitable sharing of climate burdens and benefits.", details: "Reframes climate change as a moral issue. Those least responsible for emissions are disproportionately affected by impacts.", source: "Mary Robinson Foundation", link: "https://www.mrfcj.org/principles-of-climate-justice/", theme: "bg-emerald-50 text-emerald-900 border-emerald-200" },
+            { id: 'E2', word: "CBDR Principle", description: "Shared responsibility acknowledging unequal historical contributions.", details: "Enshrined in 1992 UNFCCC. Developed nations bear greater obligations due to historical emissions and capacity to act.", source: "UNFCCC / Rio Summit", link: "https://unfccc.int/resource/docs/convkp/conveng.pdf", theme: "bg-emerald-50 text-emerald-900 border-emerald-200" },
+            { id: 'E3', word: "Environmental Protection", description: "Principle that no community bear disproportionate burdens based on race.", details: "Equal protection under environmental laws, meaningful involvement, and the elimination of 'sacrifice zones'.", source: "Robert D. Bullard", link: "https://drrobertbullard.com/", theme: "bg-emerald-50 text-emerald-900 border-emerald-200" },
+            { id: 'E4', word: "Loss and Damage", description: "Addressing irreversible climate harms beyond the scope of adaptation.", details: "Operationalized at COP28. Equity means recognizing responsibility of historical polluters to support vulnerable nations.", source: "UNFCCC / COP27", link: "https://www.frld.org/", theme: "bg-emerald-50 text-emerald-900 border-emerald-200" },
+            { id: 'E5', word: "A Just Transition", description: "Shifting to a green economy in a way that is fair and protects workers.", details: "Decarbonization costs must not fall disproportionately on communities dependent on carbon-intensive industries.", source: "ILO / Tony Mazzocchi", link: "https://academic.oup.com/jel/article/35/2/229/7179360", theme: "bg-emerald-50 text-emerald-900 border-emerald-200" },
+            { id: 'E6', word: "Intergenerational Duty", description: "Preserving environmental quality and resource access for future generations.", details: "Edith Brown Weiss framework: conservation of options, quality, and access for successors. Each generation is a trustee.", source: "Edith Brown Weiss", link: "https://doi.org/10.1007/BF00138858", theme: "bg-emerald-50 text-emerald-900 border-emerald-200" },
+            { id: 'E7', word: "Rights of Nature", description: "Granting enforceable rights to ecosystems to exist and regenerate.", details: "Nature is a subject, not an object. Ecuador was first to enshrine this in 2008, granting nature the right to vital cycles.", source: "Global Alliance for the Rights of Nature", link: "https://ecojurisprudence.org/initiatives/ecuador-constitution/", theme: "bg-emerald-50 text-emerald-900 border-emerald-200" }
+        ];
+
+        const INQUIRY_BANK = [
+            { domain: "Finance & Wealth", q: "Can race-neutral economic policies effectively close the racial wealth gap, or must they be race-conscious?", a: "A 2019 analysis projected Baby Bonds would reduce the Black-white young adult wealth gap ratio from 15.9:1 to 1.4:1—substantial but incomplete. Structural factors like intergenerational transfers require targeted responses.", source: "Aladangady & Forde (2021) / Federal Reserve Board" },
+            { domain: "Housing & Land", q: "If housing is a human right, why does segregation persist even in countries with anti-discrimination laws?", a: "Rights alone do not dismantle land speculation or exclusionary zoning. Spatial inequality is sustained by interlocking institutional practices requiring inclusionary zoning and community land trusts.", source: "Massey & Denton (1993) / UN Special Rapporteur" },
+            { domain: "Technology & AI", q: "Can technical fairness metrics alone ensure equitable AI, or do they risk obscuring structural inequities?", a: "Algorithms optimized for cost prediction often deprioritize Black patients due to historical access barriers. Equitable AI requires diverse design, historical context, and accountability centering affected communities.", source: "Obermeyer et al. (2019) / Science 366(6464)" },
+            { domain: "Health & Biology", q: "Why do racial health disparities persist even when income and insurance are equivalent?", a: "Institutionalized racism in housing and environmental exposures creates cumulative disadvantage over a life course. State-level structural racism predicts infant mortality independent of individual factors.", source: "Camara Jones (2000) / Dean & Thorpe (2022)" },
+            { domain: "Law & Governance", q: "Can formally equal 'colorblind' legal frameworks achieve substantive equity?", a: "treating everyone identically deepens inequality by ignoring differential structural positioning. Targeted universalism resolve this by using differentiated strategies to reach shared outcomes.", source: "john a. powell / Othering & Belonging Institute" },
+            { domain: "Ecology & Climate", q: "Can climate equity be achieved without addressing wealthy nations' historical emissions?", a: "The top 10% of households contribute 34–45% of emissions, while the Global South faces the most severe impacts. Historical responsibility is a foundational pillar of equity frameworks.", source: "IPCC (2022) / WGIII Summary for Policymakers" }
+        ];
+
+        const App = () => {
+            const [index, setIndex] = useState(0);
+            const [activePanel, setActivePanel] = useState(null);
+            const [userInput, setUserInput] = useState("");
+            const [searchQuery, setSearchQuery] = useState("");
+            const [showInquiryNotice, setShowInquiryNotice] = useState(false);
+            const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+
+            useEffect(() => {
+                if (!isAutoPlaying || activePanel) return;
+                const interval = setInterval(() => {
+                    setIndex((prev) => (prev + 1) % DEFINITIONS.length);
+                }, 12000);
+                return () => clearInterval(interval);
+            }, [isAutoPlaying, activePanel]);
+
+            const nextDefinition = (e) => {
+                e?.stopPropagation();
+                setIsAutoPlaying(false);
+                setIndex((prev) => (prev + 1) % DEFINITIONS.length);
+            };
+
+            const prevDefinition = (e) => {
+                e?.stopPropagation();
+                setIsAutoPlaying(false);
+                setIndex((prev) => (prev === 0 ? DEFINITIONS.length - 1 : prev - 1));
+            };
+
+            const filteredDefinitions = useMemo(() => {
+                return DEFINITIONS.filter(d => 
+                    d.word.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                    d.details.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    d.source.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+            }, [searchQuery]);
+
+            const current = DEFINITIONS[index];
+
+            return (
+                <div className={`min-h-screen transition-colors duration-1000 ${current.theme.split(' ')[0]} flex flex-col font-sans text-slate-900 overflow-hidden`}>
+                    <header className="p-6 md:p-10 flex justify-between items-center z-10">
+                        <h1 className="text-2xl font-black tracking-tighter">equity<span className="opacity-30">.is</span></h1>
+                        <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-[0.4em] opacity-30">
+                            <span>{index + 1} of {DEFINITIONS.length}</span>
+                            <div className="h-1 w-24 bg-black/10 rounded-full overflow-hidden">
+                                <div className="h-full bg-black transition-all duration-500" style={{ width: `${((index + 1) / DEFINITIONS.length) * 100}%` }} />
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 relative flex flex-col items-center justify-center px-6 text-center cursor-pointer group" onClick={nextDefinition}>
+                        <div className="absolute inset-y-0 left-0 w-24 md:w-48 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={prevDefinition} className="p-4 hover:scale-125 transition-transform"><Icon name="ChevronLeft" size={48} className="text-black/20" /></button>
+                        </div>
+                        <div className="absolute inset-y-0 right-0 w-24 md:w-48 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={nextDefinition} className="p-4 hover:scale-125 transition-transform"><Icon name="ChevronRight" size={48} className="text-black/20" /></button>
+                        </div>
+
+                        <div className="max-w-5xl space-y-12 animate-in relative z-10">
+                            <div className="space-y-8 pointer-events-none">
+                                <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.9]">Equity is <br /><span className="italic">{current.word}</span></h2>
+                                <div className="flex flex-col items-center gap-6">
+                                    <p className="text-xl md:text-3xl font-medium opacity-70 leading-relaxed max-w-3xl mx-auto">{current.description}</p>
+                                    <div className="pointer-events-auto group/link">
+                                        <a href={current.link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-2 px-6 py-2 rounded-full border border-black/10 bg-white/40 backdrop-blur-sm hover:bg-white hover:border-black/20 transition-all shadow-sm hover:shadow-md">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 group-hover/link:text-slate-900">Source: {current.source}</span>
+                                            <Icon name="ExternalLink" size={14} className="text-slate-400 group-hover/link:text-slate-900" />
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-8 md:gap-16 justify-center items-center pt-8">
+                                <div className="flex flex-col items-center gap-4">
+                                    <button onClick={(e) => { e.stopPropagation(); setActivePanel('inquiry'); }} className={`w-28 h-28 md:w-36 md:h-36 rounded-full border-2 border-black/10 flex items-center justify-center transition-all hover:bg-white hover:scale-110 hover:shadow-2xl active:scale-95 ${activePanel === 'inquiry' ? 'bg-white shadow-xl ring-4 ring-black/5' : 'bg-transparent'}`}>
+                                        <span className="text-5xl md:text-7xl font-black italic">?</span>
+                                    </button>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Inquiry</span>
+                                </div>
+                                <div className="flex flex-col items-center gap-4">
+                                    <button onClick={(e) => { e.stopPropagation(); setActivePanel('archive'); }} className={`w-28 h-28 md:w-36 md:h-36 rounded-full border-2 border-black/10 flex items-center justify-center transition-all hover:bg-white hover:scale-110 hover:shadow-2xl active:scale-95 ${activePanel === 'archive' ? 'bg-white shadow-xl ring-4 ring-black/5' : 'bg-transparent'}`}>
+                                        <span className="text-5xl md:text-7xl font-black italic">!</span>
+                                    </button>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Archive</span>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+
+                    {/* Panels */}
+                    <div className={`fixed inset-y-0 right-0 w-full md:w-[550px] bg-white shadow-2xl z-50 transform transition-transform duration-500 ease-in-out ${activePanel === 'archive' ? 'translate-x-0' : 'translate-x-full'}`}>
+                        <div className="h-full flex flex-col">
+                            <div className="p-8 border-b flex justify-between items-center bg-slate-50">
+                                <h3 className="text-2xl font-black italic">The Concept Inventory</h3>
+                                <button onClick={() => setActivePanel(null)} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><Icon name="X" /></button>
+                            </div>
+                            <div className="p-6 border-b">
+                                <div className="relative">
+                                    <Icon name="Search" size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                    <input type="text" placeholder="Search the 42 concepts..." className="w-full bg-slate-100 rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-black/5 font-medium" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                                {filteredDefinitions.length > 0 ? filteredDefinitions.map((def) => {
+                                    const realIndex = DEFINITIONS.findIndex(d => d.id === def.id);
+                                    return (
+                                        <div key={def.id} className={`space-y-4 p-8 rounded-[2rem] border transition-all cursor-pointer ${index === realIndex ? 'ring-2 ring-black bg-slate-50 shadow-sm' : 'hover:bg-slate-50'}`} onClick={() => { setIndex(realIndex); setActivePanel(null); }}>
+                                            <div className="flex justify-between items-start">
+                                                <h4 className="text-xl font-black italic leading-tight">{def.word}</h4>
+                                                <span className="text-[10px] font-bold opacity-30 px-2 py-1 bg-slate-200 rounded-lg">{def.id}</span>
+                                            </div>
+                                            <p className="text-base text-slate-600 leading-relaxed font-medium">{def.details}</p>
+                                            <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                                                <span className="text-[10px] font-black uppercase tracking-widest opacity-40 truncate max-w-[250px]">{def.source}</span>
+                                                <a href={def.link} target="_blank" rel="noreferrer" className="text-slate-900 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest hover:text-indigo-600" onClick={e => e.stopPropagation()}>Explore <Icon name="ExternalLink" size={12} /></a>
+                                            </div>
+                                        </div>
+                                    );
+                                }) : <div className="text-center py-20 opacity-30 text-sm italic">No concepts found in the archive.</div>}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={`fixed inset-y-0 right-0 w-full md:w-[550px] bg-white shadow-2xl z-50 transform transition-transform duration-500 ease-in-out ${activePanel === 'inquiry' ? 'translate-x-0' : 'translate-x-full'}`}>
+                        <div className="h-full flex flex-col">
+                            <div className="p-8 border-b flex justify-between items-center bg-indigo-50">
+                                <h3 className="text-2xl font-black italic">Inquiry</h3>
+                                <button onClick={() => setActivePanel(null)} className="p-2 hover:bg-indigo-100 rounded-full transition-colors"><Icon name="X" /></button>
+                            </div>
+                            <div className="p-8 bg-indigo-50/50 relative">
+                                <form onSubmit={(e) => { e.preventDefault(); setShowInquiryNotice(true); setTimeout(() => setShowInquiryNotice(false), 8000); }} className="space-y-4">
+                                    <label className="text-xs font-black uppercase tracking-widest opacity-50 flex items-center gap-2">Questions people have about equity <Icon name="Info" size={12} /></label>
+                                    <div className="relative">
+                                        <input type="text" value={userInput} onChange={(e) => setUserInput(e.target.value)} placeholder="Ask a new question..." className="w-full bg-white border-2 border-indigo-100 rounded-2xl px-6 py-4 focus:outline-none focus:border-indigo-600 transition-all font-medium pr-16 shadow-sm" />
+                                        <button className="absolute right-2 top-2 bg-indigo-600 text-white p-2 rounded-xl hover:scale-105 transition-transform shadow-lg"><Icon name="ArrowRight" size={24} /></button>
+                                    </div>
+                                </form>
+                                {showInquiryNotice && (
+                                    <div className="absolute top-0 left-0 right-0 p-8 bg-indigo-600 text-white z-20 rounded-b-[2rem] shadow-2xl animate-in">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <h4 className="text-lg font-bold flex items-center gap-2 italic"><Icon name="Mail" size={18} /> Direct Dialogue</h4>
+                                            <button onClick={() => setShowInquiryNotice(false)} className="text-white/60 hover:text-white"><Icon name="X" size={20} /></button>
+                                        </div>
+                                        <p className="text-sm font-medium leading-relaxed mb-6">Community submission features are not yet live. Please contribute to the discourse by reaching out to the steward of this project.</p>
+                                        <a href="mailto:john@thisequals.net" className="flex items-center justify-center gap-2 bg-white text-indigo-600 px-6 py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-50 transition-colors shadow-sm">Email john@thisequals.net <Icon name="ArrowRight" size={14} /></a>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-8 space-y-12 custom-scrollbar">
+                                <h4 className="text-xs font-black uppercase tracking-widest opacity-40 mb-2 border-b pb-4">Evidence-Based Bank</h4>
+                                {INQUIRY_BANK.map((item, i) => (
+                                    <div key={i} className="space-y-6 animate-in">
+                                        <div className="flex gap-4 items-start">
+                                            <div className="mt-1 flex-shrink-0 p-2 bg-indigo-100 rounded-xl"><Icon name="MessageCircle" size={20} className="text-indigo-600" /></div>
+                                            <div className="space-y-4">
+                                                <div className="space-y-1">
+                                                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">{item.domain}</span>
+                                                    <p className="text-xl font-black text-slate-800 leading-tight italic">"{item.q}"</p>
+                                                </div>
+                                                <div className="p-6 bg-slate-50 border border-slate-100 rounded-[1.5rem] space-y-4 shadow-sm relative overflow-hidden">
+                                                    <Icon name="Quote" className="absolute -top-2 -right-2 text-slate-200 w-16 h-16 opacity-50 -z-0" />
+                                                    <p className="text-sm text-slate-600 leading-relaxed relative z-10 font-medium">{item.a}</p>
+                                                    <div className="flex items-center gap-3 pt-4 border-t border-slate-200 relative z-10">
+                                                        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Archival Evidence</span>
+                                                        <span className="text-[10px] font-black text-indigo-600">{item.source}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer className="p-6 md:p-10 opacity-30 text-[10px] font-bold uppercase tracking-[0.5em] flex justify-between items-center pointer-events-none">
+                        <span>Equity is a Practice</span>
+                        <div className="flex gap-4">
+                            <span className="h-1 w-8 bg-black/20 rounded-full" />
+                            <span className="h-1 w-12 bg-black/10 rounded-full" />
+                            <span className="hidden md:inline">A Living Reflection — 2026</span>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
